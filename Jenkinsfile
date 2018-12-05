@@ -46,7 +46,10 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts 'out/*'
+            script {
+                archiveArtifacts 'out/*'
+                updateCard "5b4720cc82baf13c954c5cf7"
+            }
         }
         success {
             build job: '../GDP-tests', wait: false
