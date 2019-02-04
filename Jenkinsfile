@@ -20,7 +20,22 @@ pipeline {
                 }
             }
             steps {
-                sh "jupyter-nbconvert --output-dir=out --ExecutePreprocessor.timeout=None --execute 'Long-term international migration 2.02 next or last residence tidydata.ipynb'"
+                sh "jupyter-nbconvert --output-dir=out --ExecutePreprocessor.timeout=None --execute 'main.ipynb'"
+            }
+        }
+        stage('Test') {
+            agent {
+                docker {
+                    image 'cloudfluff/csvlint'
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        sh "csvlint -s schema.json"
+                    }
+                }
             }
         }
         stage('Upload draftset') {
