@@ -143,7 +143,9 @@ tidy['Country of Residence'] = tidy['Country of Residence'].cat.rename_categorie
     'South East Asia' :'south-east-asia',
     'Sub-Saharan Africa' : 'sub-saharan-africa',
     'All countries' : 'all',
-    'Asia'  : 'asia'
+    'Asia'  : 'asia',
+    '2011 Census Revisions1' : '2011 Census Revisions',
+    'Original Estimates1' : 'Original Estimates'
             
 })
 tidy['Flow'] = tidy['Flow'].cat.rename_categories({
