@@ -3,7 +3,7 @@
 
 # Long-term international migration 2.02, last or next resident, UK and England and Wales
 
-# In[3]:
+# In[35]:
 
 
 from gssutils import *
@@ -11,21 +11,20 @@ scraper = Scraper('https://www.ons.gov.uk/peoplepopulationandcommunity/populatio
 scraper
 
 
-# In[4]:
+# In[36]:
 
 
 tab = next(t for t in scraper.distributions[0].as_databaker() if t.name == 'Table 2.02')
 
 
-# In[5]:
+# In[37]:
 
 
 cell = tab.filter('Year')
 cell.assert_one()
-Residence = cell.fill(RIGHT).is_not_blank().is_not_whitespace()  |             cell.shift(0,1).fill(RIGHT).is_not_blank().is_not_whitespace() |             cell.shift(0,2).expand(RIGHT).is_not_blank().is_not_whitespace().is_not_bold()             .filter(lambda x: type(x.value) != 'All' not in x.value)
 
 
-# In[6]:
+# In[38]:
 
 
 observations = cell.shift(RIGHT).fill(DOWN).filter('Estimate').expand(RIGHT).filter('Estimate')                 .fill(DOWN).is_not_blank().is_not_whitespace() 
@@ -34,28 +33,32 @@ observations = observations - (tab.excel_ref('A1').expand(DOWN).expand(RIGHT).fi
 original_estimates = tab.filter(contains_string('Original Estimates')).fill(DOWN).is_number()
 observations = observations - original_estimates - Str
 
+removal1 = tab.filter(contains_string('Original Estimates1'))
+removal2 = tab.filter(contains_string('2011 Census Revisions1'))
+Residence = cell.fill(RIGHT).is_not_blank().is_not_whitespace()  |             cell.shift(0,1).fill(RIGHT).is_not_blank().is_not_whitespace() |             cell.shift(0,2).expand(RIGHT).is_not_blank().is_not_whitespace().is_not_bold()             .filter(lambda x: type(x.value) != 'All' not in x.value) - removal1 - removal2
 
-# In[7]:
+
+# In[39]:
 
 
 CI = observations.shift(RIGHT)
 
 
-# In[8]:
+# In[40]:
 
 
 Year = cell.fill(DOWN) 
 Year = Year.filter(lambda x: type(x.value) != str or 'Significant Change?' not in x.value)
 
 
-# In[9]:
+# In[41]:
 
 
 Geography = cell.fill(DOWN).one_of(['United Kingdom', 'England and Wales'])
 Flow = cell.fill(DOWN).one_of(['Inflow', 'Outflow', 'Balance'])
 
 
-# In[10]:
+# In[42]:
 
 
 csObs = ConversionSegment(observations, [
@@ -68,11 +71,13 @@ csObs = ConversionSegment(observations, [
     HDim(CI,'CI',DIRECTLY,RIGHT),
     HDimConst('Revision', '2011 Census Revision')
 ])
-savepreviewhtml(csObs)
+#savepreviewhtml(csObs)
+savepreviewhtml(csObs, fname="Preview.html")
+
 tidy_revised = csObs.topandas()
 
 
-# In[11]:
+# In[43]:
 
 
 csRevs = ConversionSegment(original_estimates, [
@@ -88,13 +93,13 @@ csRevs = ConversionSegment(original_estimates, [
 orig_estimates = csRevs.topandas()
 
 
-# In[12]:
+# In[44]:
 
 
 tidy = pd.concat([tidy_revised, orig_estimates], axis=0, join='outer', ignore_index=True, sort=False)
 
 
-# In[13]:
+# In[45]:
 
 
 import numpy as np
@@ -107,7 +112,7 @@ tidy['Value'] = tidy['Value'].astype(int)
 tidy['CI'] = tidy['CI'].map(lambda x:'' if x == ':' else int(x[:-2]) if x.endswith('.0') else 'ERR')
 
 
-# In[14]:
+# In[46]:
 
 
 for col in tidy.columns:
@@ -117,7 +122,7 @@ for col in tidy.columns:
         display(tidy[col].cat.categories)
 
 
-# In[15]:
+# In[47]:
 
 
 tidy['Geography'] = tidy['Geography'].cat.rename_categories({
@@ -158,25 +163,25 @@ tidy = tidy[['Geography', 'Year', 'Country of Residence', 'Flow',
               'Measure Type','Value', 'CI','Unit', 'Revision']]
 
 
-# In[16]:
+# In[48]:
 
 
 tidy['Year'] = tidy['Year'].apply(lambda x: pd.to_numeric(x, downcast='integer'))
 
 
-# In[17]:
+# In[49]:
 
 
 tidy['Year'] = tidy['Year'].astype(int)
 
 
-# In[18]:
+# In[50]:
 
 
 tidy
 
 
-# In[19]:
+# In[51]:
 
 
 from pathlib import Path
@@ -186,7 +191,7 @@ destinationFolder.mkdir(exist_ok=True, parents=True)
 tidy.to_csv(destinationFolder / ('observations.csv'), index = False)
 
 
-# In[21]:
+# In[52]:
 
 
 from gssutils.metadata import THEME
